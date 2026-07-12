@@ -343,7 +343,8 @@ if submitted:
             pdf.set_font("Arial", "I", 8)
             pdf.multi_cell(0, 5, "Este reporte es solo educativo y de entretenimiento. No constituye asesoramiento financiero. Consulta a un profesional. Hecho con @OpcionesMarket")
             
-            return pdf.output(dest="S").encode("latin-1")
+            # Compatible con fpdf2
+            return bytes(pdf.output())
         
         pdf_bytes = create_pdf()
         st.download_button(
