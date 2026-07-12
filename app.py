@@ -460,23 +460,63 @@ if submitted:
             mime="application/pdf"
         )
         
-        # JSON download
+        # === GUARDAR EN GOOGLE SHEETS (automático) ===
         respuestas = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "modo_familia": modo_familia,
-            "nombre_familiar": nombre_familiar,
+            "modo_familia": str(modo_familia),
+            "nombre_familiar": nombre_familiar or "",
             "edad": edad,
             "genero": genero,
+            "situacion": ", ".join(situacion) if situacion else "",
             "capital": capital,
             "aporte": aporte_mensual,
-            "riesgo_final": nivel_riesgo_final,
+            "experiencia": experiencia,
             "objetivo": objetivo,
+            "riesgo_declarado": riesgo,
+            "riesgo_final": nivel_riesgo_final,
+            "score_riesgo": score_riesgo,
             "horizonte": horizonte,
+            "miedos": ", ".join(miedos) if miedos else "",
             "estrategia": estrategia,
-            "etfs": etfs_recomendados
+            "etfs": " | ".join(etfs_recomendados)
         }
+        
+        # Intentar guardar en Google Sheets
+        try:
+            import gspread
+            from google.oauth2.service_account import Credentials
+            
+            # Usa los secrets de Streamlit
+            scopes = [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive"
+            ]
+            
+            # Lee las credenciales desde st.secrets
+            creds_dict = st.secrets["gcp_service_account"]
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            client = gspread.authorize(credentials)
+            
+            # Abre la hoja (reemplaza con el nombre o ID de tu sheet)
+            sheet = client.open("OpcionesMarket - Perfiles").sheet1
+            
+            # Si es la primera vez, escribe los headers
+            if sheet.row_count == 0 or not sheet.row_values(1):
+                headers = list(respuestas.keys())
+                sheet.append_row(headers)
+            
+            # Agrega la fila de datos
+            sheet.append_row(list(respuestas.values()))
+            
+            st.success("✅ Datos guardados automáticamente en Google Sheets de OpcionesMarket")
+            
+        except Exception as e:
+            st.warning(f"⚠️ No se pudo guardar en Google Sheets todavía (falta configurar secrets). Error: {str(e)[:80]}")
+            st.info("Mientras tanto, descarga el JSON abajo.")
+        
+        # JSON download (backup)
         st.download_button(
-            label="📥 Descargar datos (JSON)",
+            label="📥 Descargar datos (JSON) - Backup",
             data=json.dumps(respuestas, ensure_ascii=False, indent=2),
             file_name="perfil_respuestas.json",
             mime="application/json"
