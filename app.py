@@ -67,6 +67,99 @@ if submitted:
             capital = 500
             aporte_mensual = 200
         
+        st.subheader("👤 Tu Perfil")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**Edad:** {edad} años")
+            st.write(f"**Situación:** {', '.join(situacion)}")
+            st.write(f"**Objetivo:** {objetivo}")
+        with col2:
+            st.write(f"**Capital inicial:** ${capital:,}")
+            st.write(f"**Aporte mensual:** ${aporte_mensual:,}")
+            st.write(f"**Riesgo:** {riesgo}")
+            st.write(f"**Horizonte:** {horizonte}")
+        
+        st.subheader("📊 Distribución Recomendada")
+        fig, ax = plt.subplots()
+        if "Bajo" in riesgo:
+            sizes = [40, 10, 50]
+        elif "Alto" in riesgo:
+            sizes = [60, 25, 15]
+        else:
+            sizes = [50, 20, 30]
+        ax.pie(sizes, labels=['Acciones/ETFs', 'Opciones', 'Efectivo'], autopct='%1.1f%%')
+        ax.axis('equal')
+        st.pyplot(fig)
+        
+        st.subheader("🚀 Proyección de Crecimiento")
+        years = 10
+        future_value = capital
+        values = [capital]
+        for y in range(1, years+1):
+            future_value = future_value * 1.09 + aporte_mensual * 12
+            values.append(future_value)
+        
+        fig2, ax2 = plt.subplots()
+        ax2.plot(range(0, years+1), values, marker='o', linewidth=2.5, color='#2E8B57')
+        ax2.set_xlabel("Años")
+        ax2.set_ylabel("Valor Estimado (USD)")
+        ax2.set_title("Crecimiento proyectado con disciplina")
+        st.pyplot(fig2)
+        
+        st.write(f"**En {years} años podrías estar cerca de: ${int(values[-1]):,}** (estimación educativa)")
+        
+        st.subheader("🎯 Recomendaciones Personalizadas")
+        st.markdown("**Importante:** Esto es educativo. Consulta a un asesor financiero.")
+        
+        if capital < 1000:
+            st.write("**Inicio recomendado:** ETFs de bajo costo y paper trading.")
+        elif "Bajo" in riesgo:
+            st.write("**Enfoque:** Conservador con ETFs de dividendos (SCHD, JEPI).")
+        elif "Alto" in riesgo:
+            st.write("**Enfoque:** Crecimiento con LEAPs y acciones de tecnología.")
+        else:
+            st.write("**Enfoque:** La Rueda o Covered Calls para ingresos.")
+        
+        st.write("**Top ETFs sugeridos:** VOO, SCHD, JEPI, QQQ, VXUS")
+        
+        with st.expander("📢 Versión para publicar en X"):
+            st.code(f"Perfil: {edad} años | Capital \~${capital} | Horizonte: {horizonte}\n#OpcionesMarket", language="markdown")
+        
+        st.download_button("📥 Descargar Reporte", data="{}", file_name="mi_perfil_inversor.json", mime="application/json")
+
+st.caption("Herramienta educativa de @OpcionesMarket • DYOR")    riesgo = st.select_slider("7. ¿Cuál es tu nivel de atrevimiento y riesgo?",
+                              options=["Bajo (prefiero seguridad)", "Medio (acepto algo de subida y bajada)", 
+                                       "Alto (busco crecimiento fuerte aunque pueda perder)"])
+    st.caption("ℹ️ Esto es clave para no recomendarte algo que te quite el sueño.")
+    
+    horizonte = st.selectbox("8. ¿Por cuánto tiempo planeas dejar el dinero invertido?",
+                             ["Menos de 2 años", "2-5 años", "5-10 años", "Más de 10 años / hasta jubilación"])
+    st.caption("ℹ️ Un horizonte largo permite estrategias más agresivas.")
+    
+    aporte = st.text_input("9. ¿Cuánto dinero mensual puedes destinar a tu plan de inversión? (en USD)",
+                           placeholder="Ej: $200 - $500")
+    st.caption("ℹ️ Esto nos ayuda a diseñar un plan realista y sostenible.")
+    
+    miedos_options = ["Miedo a perder dinero", "Volatilidad del mercado", "No entiendo las opciones", 
+                      "Prefiero solo inversiones seguras", "Falta de tiempo para monitorear", "Otro"]
+    miedos = st.multiselect("10. ¿Qué miedos o preferencias tienes?", miedos_options)
+    st.caption("ℹ️ Esto nos ayuda a adaptar el plan a lo que te hace sentir cómodo.")
+    
+    submitted = st.form_submit_button("🚀 Generar mi Reporte Personalizado", use_container_width=True)
+
+if submitted:
+    if not edad or not capital_inicial or not aporte:
+        st.error("Por favor completa edad, capital inicial y aporte mensual.")
+    else:
+        st.success("✅ ¡Reporte Generado!")
+        
+        try:
+            capital = int(capital_inicial)
+            aporte_mensual = int(aporte)
+        except:
+            capital = 500
+            aporte_mensual = 200
+        
         # Perfil
         st.subheader("👤 Tu Perfil")
         col1, col2 = st.columns(2)
