@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Perfil Inversionista - OpcionesMarket", layout="centered")
 
 st.title("📈 Tu Perfil de Inversionista Personalizado")
-st.markdown("**Reporte Educativo** • Contenido para fines educativos y de entretenimiento. No es asesoramiento financiero. DYOR.")
+st.markdown("**Reporte Educativo** • Contenido educativo y de entretenimiento. No es asesoramiento financiero. DYOR.")
 
 with st.form("cuestionario"):
     st.subheader("Cuestionario Rápido")
@@ -67,6 +67,7 @@ if submitted:
             capital = 500
             aporte_mensual = 200
         
+        # Perfil
         st.subheader("👤 Tu Perfil")
         col1, col2 = st.columns(2)
         with col1:
@@ -79,6 +80,7 @@ if submitted:
             st.write(f"**Riesgo:** {riesgo}")
             st.write(f"**Horizonte:** {horizonte}")
         
+        # Allocation
         st.subheader("📊 Distribución Recomendada")
         fig, ax = plt.subplots()
         if "Bajo" in riesgo:
@@ -91,6 +93,7 @@ if submitted:
         ax.axis('equal')
         st.pyplot(fig)
         
+        # Proyección
         st.subheader("🚀 Proyección de Crecimiento")
         years = 10
         future_value = capital
@@ -106,21 +109,31 @@ if submitted:
         ax2.set_title("Crecimiento proyectado con disciplina")
         st.pyplot(fig2)
         
-        st.write(f"**En {years} años podrías estar cerca de: ${int(values[-1]):,}** (estimación educativa)")
+        st.write(f"**En {years} años podrías estar cerca de: ${int(values[-1]):,}** (estimación educativa ~9% anual)")
         
+        # Recomendaciones dinámicas
         st.subheader("🎯 Recomendaciones Personalizadas")
         st.markdown("**Importante:** Esto es educativo. Consulta a un asesor financiero.")
         
         if capital < 1000:
-            st.write("**Inicio recomendado:** ETFs de bajo costo y paper trading.")
+            st.write("**Inicio recomendado:** ETFs de bajo costo y paper trading para practicar.")
+            etfs = "VOO, SPY, SCHD"
         elif "Bajo" in riesgo:
-            st.write("**Enfoque:** Conservador con ETFs de dividendos (SCHD, JEPI).")
-        elif "Alto" in riesgo:
-            st.write("**Enfoque:** Crecimiento con LEAPs y acciones de tecnología.")
+            st.write("**Enfoque conservador:** Prioriza seguridad y dividendos.")
+            etfs = "SCHD, JEPI, VOO"
+        elif "Alto" in riesgo and "Crecer" in objetivo:
+            st.write("**Enfoque agresivo:** Crecimiento con apalancamiento moderado.")
+            etfs = "QQQ, VGT, SOXX"
         else:
-            st.write("**Enfoque:** La Rueda o Covered Calls para ingresos.")
+            st.write("**Enfoque equilibrado:** La Rueda o Covered Calls para generar ingresos.")
+            etfs = "VOO, SCHD, JEPI"
         
-        st.write("**Top ETFs sugeridos:** VOO, SCHD, JEPI, QQQ, VXUS")
+        st.write(f"**Top ETFs recomendados:** {etfs}")
+        
+        st.write("**Próximos pasos:**")
+        st.write("• Mes 1-3: Configura cuenta y empieza aportes mensuales")
+        st.write("• Revisa cada 3 meses")
+        st.write("• Mantén disciplina para ver resultados")
         
         with st.expander("📢 Versión para publicar en X"):
             st.code(f"Perfil: {edad} años | Capital ~${capital} | Horizonte: {horizonte}\n#OpcionesMarket", language="markdown")
