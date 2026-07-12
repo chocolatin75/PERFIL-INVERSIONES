@@ -2,3 +2,5 @@ streamlit
 matplotlib
 fpdf2
 pillow
+gspread
+google-auth
