@@ -304,53 +304,140 @@ if submitted:
         st.subheader("🤝 ¿Quieres ayuda personalizada?")
         st.info("Si quieres que te ayude a refinar este plan o armar trades específicos, escríbeme en X: **@chocolatin75** o **@OpcionesMarket**")
         
-        # PDF Download
+        # PDF Download - Versión chula con branding y gráficas
         st.subheader("📄 Descargar Reporte en PDF")
         
         def create_pdf():
+            # Guardar gráficas como imágenes temporales
+            pie_path = "/tmp/pie_chart.png"
+            growth_path = "/tmp/growth_chart.png"
+            
+            # Re-generar pie para el PDF
+            fig_pie, ax_pie = plt.subplots(figsize=(5, 3.5))
+            if nivel_riesgo_final == "Conservador" or "Bajo" in riesgo:
+                sizes = [35, 5, 60]
+                labels = ['Acciones/ETFs', 'Opciones', 'Efectivo/Bonos']
+            elif nivel_riesgo_final == "Agresivo" or "Alto" in riesgo:
+                sizes = [55, 30, 15]
+                labels = ['Acciones/ETFs', 'Opciones', 'Efectivo']
+            else:
+                sizes = [50, 20, 30]
+                labels = ['Acciones/ETFs', 'Opciones', 'Efectivo']
+            ax_pie.pie(sizes, labels=labels, autopct='%1.1f%%', colors=['#2E8B57', '#1565C0', '#FFC107'])
+            ax_pie.set_title("Distribución Recomendada")
+            fig_pie.savefig(pie_path, dpi=120, bbox_inches='tight', facecolor='white')
+            plt.close(fig_pie)
+            
+            # Growth chart
+            fig_g, ax_g = plt.subplots(figsize=(6, 3))
+            vals = [capital]
+            fv = capital
+            for y in range(1, 11):
+                fv = fv * 1.09 + aporte_mensual * 12
+                vals.append(fv)
+            ax_g.plot(range(0, 11), vals, marker='o', linewidth=2.5, color='#2E8B57')
+            ax_g.fill_between(range(0, 11), vals, alpha=0.2, color='#2E8B57')
+            ax_g.set_xlabel("Años")
+            ax_g.set_ylabel("USD")
+            ax_g.set_title("Proyección Realista (~9%)")
+            ax_g.grid(True, alpha=0.3)
+            fig_g.savefig(growth_path, dpi=120, bbox_inches='tight', facecolor='white')
+            plt.close(fig_g)
+            
+            # Crear PDF
             pdf = FPDF()
             pdf.add_page()
-            pdf.set_font("Arial", "B", 16)
-            pdf.cell(0, 10, "Perfil de Inversionista Personalizado", ln=True, align="C")
-            pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, "Reporte Educativo - DYOR - No es asesoramiento financiero", ln=True, align="C")
-            pdf.ln(5)
             
+            # === ENCABEZADO BRANDING ===
+            pdf.set_fill_color(46, 139, 87)  # Verde OpcionesMarket
+            pdf.rect(0, 0, 210, 28, 'F')
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font("Arial", "B", 18)
+            pdf.set_xy(10, 8)
+            pdf.cell(0, 10, "OpcionesMarket", ln=True, align="C")
+            pdf.set_font("Arial", "", 9)
+            pdf.set_xy(10, 17)
+            pdf.cell(0, 6, "Perfil de Inversionista Personalizado  |  Educativo - DYOR", ln=True, align="C")
+            
+            # Reset color
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_y(35)
+            
+            # Título del perfil
             if modo_familia and nombre_familiar:
-                pdf.set_font("Arial", "B", 12)
-                pdf.cell(0, 8, f"Perfil de: {nombre_familiar} ({relacion})", ln=True)
+                pdf.set_font("Arial", "B", 14)
+                pdf.cell(0, 8, f"Perfil de: {nombre_familiar} ({relacion})", ln=True, align="C")
+            else:
+                pdf.set_font("Arial", "B", 14)
+                pdf.cell(0, 8, "Tu Perfil Personalizado", ln=True, align="C")
             
-            pdf.set_font("Arial", "B", 12)
-            pdf.cell(0, 8, "Datos del Perfil", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 6, f"Edad: {edad} | Capital: ${capital:,} | Aporte mensual: ${aporte_mensual:,}", ln=True)
-            pdf.cell(0, 6, f"Riesgo: {nivel_riesgo_final} | Horizonte: {horizonte} | Objetivo: {objetivo}", ln=True)
             pdf.ln(3)
             
-            pdf.set_font("Arial", "B", 12)
-            pdf.cell(0, 8, "Estrategia Recomendada", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.multi_cell(0, 6, estrategia)
+            # Datos clave en cajas
+            pdf.set_font("Arial", "B", 11)
+            pdf.cell(0, 7, "Datos Clave", ln=True)
+            pdf.set_font("Arial", "", 9)
+            pdf.cell(95, 6, f"Edad: {edad} años", border=0)
+            pdf.cell(95, 6, f"Capital inicial: ${capital:,}", ln=True)
+            pdf.cell(95, 6, f"Aporte mensual: ${aporte_mensual:,}", border=0)
+            pdf.cell(95, 6, f"Riesgo: {nivel_riesgo_final}", ln=True)
+            pdf.cell(95, 6, f"Horizonte: {horizonte}", border=0)
+            pdf.cell(95, 6, f"Objetivo: {objetivo[:30]}", ln=True)
+            
+            pdf.ln(4)
+            
+            # Gráficas lado a lado
+            pdf.set_font("Arial", "B", 11)
+            pdf.cell(0, 7, "Visuales", ln=True)
+            try:
+                pdf.image(pie_path, x=10, y=pdf.get_y(), w=85)
+                pdf.image(growth_path, x=105, y=pdf.get_y(), w=95)
+                pdf.ln(55)
+            except Exception as e:
+                pdf.cell(0, 6, "(Graficas no disponibles en este PDF)", ln=True)
+                pdf.ln(5)
+            
+            # Estrategia
+            pdf.set_font("Arial", "B", 11)
+            pdf.cell(0, 7, "Estrategia Recomendada", ln=True)
+            pdf.set_font("Arial", "", 9)
+            pdf.multi_cell(0, 5, estrategia)
+            pdf.ln(2)
+            
+            # Top ETFs
+            pdf.set_font("Arial", "B", 11)
+            pdf.cell(0, 7, "Top ETFs / Activos Recomendados", ln=True)
+            pdf.set_font("Arial", "", 9)
+            for etf in etfs_recomendados[:5]:
+                pdf.cell(0, 5, f"  - {etf}", ln=True)
+            
             pdf.ln(3)
             
-            pdf.set_font("Arial", "B", 12)
-            pdf.cell(0, 8, "Top ETFs", ln=True)
-            pdf.set_font("Arial", "", 10)
-            for etf in etfs_recomendados:
-                pdf.cell(0, 6, f"- {etf}", ln=True)
+            # Timeline corto
+            pdf.set_font("Arial", "B", 11)
+            pdf.cell(0, 7, "Timeline de Accion (6 meses)", ln=True)
+            pdf.set_font("Arial", "", 8)
+            pdf.multi_cell(0, 4, "Mes 1: Configura cuenta + primeros ETFs.  |  Mes 2-3: Aportes automaticos + paper trading.  |  Mes 4: Primera posicion real.  |  Cada 3 meses: Revision completa.")
             
-            pdf.ln(5)
-            pdf.set_font("Arial", "I", 8)
-            pdf.multi_cell(0, 5, "Este reporte es solo educativo y de entretenimiento. No constituye asesoramiento financiero. Consulta a un profesional. Hecho con @OpcionesMarket")
+            # Footer branding
+            pdf.set_y(-25)
+            pdf.set_fill_color(46, 139, 87)
+            pdf.rect(0, 272, 210, 25, 'F')
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font("Arial", "B", 9)
+            pdf.set_xy(10, 276)
+            pdf.cell(0, 5, "Hecho con @OpcionesMarket  |  X: @chocolatin75  |  Educativo - DYOR", ln=True, align="C")
+            pdf.set_font("Arial", "", 7)
+            pdf.set_xy(10, 282)
+            pdf.cell(0, 4, "No soy asesor financiero. Este reporte es solo para educacion y entretenimiento.", ln=True, align="C")
             
-            # Compatible con fpdf2
             return bytes(pdf.output())
         
         pdf_bytes = create_pdf()
         st.download_button(
-            label="📥 Descargar Reporte PDF Completo",
+            label="📥 Descargar Reporte PDF Completo (con graficas + branding)",
             data=pdf_bytes,
-            file_name=f"perfil_inversor_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"Perfil_OpcionesMarket_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf"
         )
         
